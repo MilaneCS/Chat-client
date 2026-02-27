@@ -32,6 +32,8 @@ class MessengerClient:
         self.gov_public_key = gov_public_key
         self.conns = {}  # data for each active connection
         self.certs = {}  # certificates of other users
+        self.username = None
+        self.long_term_keypair = None
 
 
     def generate_certificate(self, username: str) -> dict:
@@ -45,8 +47,12 @@ class MessengerClient:
         Returns:
             certificate: dict
         """
-        raise NotImplementedError("not implemented!")
-        certificate = {}
+        self.username = username
+        self.long_term_keypair = generate_eg()
+        certificate = {
+            "username": username,
+            "public_key": self.long_term_keypair["public"],
+        }
         return certificate
 
 
@@ -61,7 +67,12 @@ class MessengerClient:
         Returns:
             None
         """
-        raise NotImplementedError("not implemented!")
+        cert_str = str(certificate)
+        if not verify_with_ecdsa(self.ca_public_key, cert_str, signature):
+            raise ValueError("Tampering detected!")
+
+        username = certificate["username"]
+        self.certs[username] = certificate
 
 
     def send_message(self, name: str, plaintext: str) -> tuple[dict, tuple[bytes, bytes]]:
