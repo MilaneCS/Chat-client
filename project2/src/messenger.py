@@ -35,6 +35,11 @@ class MessengerClient:
         self.username = None
         self.long_term_keypair = None
 
+    def _get_conn_state(self, name: str) -> dict:
+        if name not in self.conns:
+            self.conns[name] = {"seen_headers": set()}
+        return self.conns[name]
+
 
     def generate_certificate(self, username: str) -> dict:
         """
@@ -86,9 +91,35 @@ class MessengerClient:
         Returns:
             (header, ciphertext): tuple(dict, tuple(bytes, bytes))
         """
-        raise NotImplementedError("not implemented!")
-        header = {}
-        ciphertext = ""
+        recipient_cert = self.certs[name]
+        recipient_public_key = recipient_cert["public_key"]
+
+        sender_ephemeral_keypair = generate_eg()
+        shared_secret = compute_dh(
+            sender_ephemeral_keypair["private"],
+            recipient_public_key,
+        )
+        salt = gen_random_salt()
+        _, message_key = hkdf(shared_secret, salt, "message-key")
+
+        gov_ephemeral_keypair = generate_eg()
+        gov_shared_secret = compute_dh(
+            gov_ephemeral_keypair["private"],
+            self.gov_public_key,
+        )
+        gov_key = hmac_to_aes_key(gov_shared_secret, gov_encryption_data_str)
+        iv_gov = gen_random_salt()
+        receiver_iv = gen_random_salt()
+
+        header = {
+            "v_sender": sender_ephemeral_keypair["public"],
+            "salt": salt,
+            "v_gov": gov_ephemeral_keypair["public"],
+            "iv_gov": iv_gov,
+            "c_gov": encrypt_with_gcm(gov_key, message_key, iv_gov),
+            "receiver_iv": receiver_iv,
+        }
+        ciphertext = encrypt_with_gcm(message_key, plaintext, receiver_iv, str(header))
         return header, ciphertext
 
 
@@ -103,7 +134,19 @@ class MessengerClient:
         Returns:
             plaintext: str
         """
-        raise NotImplementedError("not implemented!")
         header, ciphertext = message
-        plaintext = ""
+        conn_state = self._get_conn_state(name)
+        header_id = (header["v_sender"], header["receiver_iv"])
+        if header_id in conn_state["seen_headers"]:
+            raise ValueError("Replay detected!")
+
+        shared_secret = compute_dh(self.long_term_keypair["private"], header["v_sender"])
+        _, message_key = hkdf(shared_secret, header["salt"], "message-key")
+        plaintext = decrypt_with_gcm(
+            message_key,
+            ciphertext,
+            header["receiver_iv"],
+            str(header),
+        )
+        conn_state["seen_headers"].add(header_id)
         return plaintext
