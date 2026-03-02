@@ -80,7 +80,8 @@ class MessengerClient:
         self.certs[username] = certificate
 
 
-    def send_message(self, name: str, plaintext: str) -> tuple[dict, tuple[bytes, bytes]]:
+    def send_message(self, name: str, 
+                     plaintext: str) -> tuple[dict, tuple[bytes, bytes]]:
         """
         Generate the message to be sent to another user.
 
@@ -119,11 +120,13 @@ class MessengerClient:
             "c_gov": encrypt_with_gcm(gov_key, message_key, iv_gov),
             "receiver_iv": receiver_iv,
         }
-        ciphertext = encrypt_with_gcm(message_key, plaintext, receiver_iv, str(header))
+        ciphertext = encrypt_with_gcm(message_key, plaintext, receiver_iv, 
+                                      str(header))
         return header, ciphertext
 
 
-    def receive_message(self, name: str, message: tuple[dict, tuple[bytes, bytes]]) -> str:
+    def receive_message(self, name: str, 
+                        message: tuple[dict, tuple[bytes, bytes]]) -> str:
         """
         Decrypt a message received from another user.
 
@@ -140,7 +143,8 @@ class MessengerClient:
         if header_id in conn_state["seen_headers"]:
             raise ValueError("Replay detected!")
 
-        shared_secret = compute_dh(self.long_term_keypair["private"], header["v_sender"])
+        shared_secret = compute_dh(self.long_term_keypair["private"], 
+                                   header["v_sender"])
         _, message_key = hkdf(shared_secret, header["salt"], "message-key")
         plaintext = decrypt_with_gcm(
             message_key,
