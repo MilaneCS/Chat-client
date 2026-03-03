@@ -1,43 +1,54 @@
-1. In our implementation, Alice and Bob increment their Diffie-Hellman ratchets every time they
-exchange messages. Could the protocol be modified to have them increment the DH ratchets
-once every ten messages without compromising confidentiality against an eavesdropper (i.e.,
-semantic security)?
+1. 
+Yes. Ratcheting once every ten messages would not compromise confidentiality 
+against a passive eavesdropper. As long as messages are encrypted under secure 
+keys, semantic security is preserved.
 
-No. If you don’t ratchet every time, then if an attacker gets a key during a ratchet segment, they 
-can decrypt all messages sent in that segment.
+2. 
+If they never update their DH keys, forward secrecy is lost. Once the long-term
+private key is compromised, an attacker can decrypt all past messages. There is 
+also no break-in recovery, because future messages remain decryptable after 
+compromise.
 
-2. What if they never update their DH keys at all? Please explain the security consequences of
-this change with regards to Forward Secrecy and Break-in Recovery.
+3. 
+The longest sending chain used by Alice is two messages. She sends two messages
+in a row before Bob responds, so those two messages are on the same sending 
+chain.
 
-If they never update their DH keys at all, there is no break-in recovery. Once the attacker gets the keys,
- they can decrypt all past and future messages, so there is no forward secrecy because every message is compromised 
- once the key is compromised.
+The longest sending chain used by Bob is one message, because he never sends 
+more than one message consecutively before receiving a reply.
 
-3. Consider the following conversation between Alice and Bob, protected via the Double Ratchet
-Algorithm according to the spec:
-A: Hey Bob , can you send me the l o c k e r combo?
-A: I need t o g e t my l a p t o p
-B: Sure , i t ’ s 1 2 3 4!
-A: Great , thanks ! I used i t and d el e t e d the p r e vi o u s message .
-B: Did i t work?
+4. 
+The relevant security property is forward secrecy. Even after Mallory 
+compromises Alice’s device, she cannot decrypt earlier messages because the 
+Double Ratchet deletes old message keys and advances the chain key forward. Once
+ratcheted, past keys cannot be derived again, so previous messages remain 
+confidential.
 
+5. 
+The government backdoor creates a central key that can decrypt messages. If that
+key is compromised, all messages encrypted under it can be decrypted. This 
+creates significant security risk.
 
-What is the length of the longest sending chain used by Alice? By Bob? Please explain.
-The longest sending chain used by Alice is the first two messages because it ratchets up by two steps.
-The longest sending chain used by Bob is one step.
-That’s because Bob sends one message and then receives the next message, so he does not continue sending on the same chain.
+6. 
+(a)
+RSA keys take much longer to generate.
+RSA key generation requires generating large random primes (4096-bit in our 
+test), which is computationally expensive. In contrast, ECDSA key generation 
+only requires choosing a random scalar in the group, which is significantly 
+faster.
 
-4. Unfortunately, in the situation above, Mallory has been monitoring their communications
-and finally managed to compromise Alice’s phone and steal all her keys just before she sent
-her third message. Mallory will be unable to determine the locker combination. State and
-describe the relevant security property and justify why double ratchet provides this property.
+(b)
+RSA signatures take longer to generate 
+RSA signing involves a large modular exponentiation with a 4096-bit private key.
+ECDSA signing uses group operations that are faster at comparable security 
+levels.
 
-The relevant security property is forward secrecy. Even after Mallory compromises Alice’s device,
-she cannot decrypt earlier messages because the Double Ratchet deletes old message keys and advances
-the chain key forward. Once ratcheted, past keys cannot be derived again, so previous messages remain confidential.
+(c) 
+RSA signatures are longer
+With 4096-bit RSA, signatures are 512 bytes, whereas ECDSA P-384 signatures are
+only 96 bytes.
 
-5. The method of government surveillance is deeply flawed. Why might it not be as effective as
-intended? What are the major risks involved with this method?
-Giving the government a backdoor completely removes any security provided by the double ratchet method, and
-anybody who compromises the government's key will be able to decrypt any message. So, nothing is secret at all.
-Essentially, you're not even using a secure method of communication. 
+(d)
+ECDSA verification takes longer
+RSA verification is faster because it uses a small public exponent, while ECDSA
+verification involves more expensive group operations.
