@@ -3,9 +3,15 @@ exchange messages. Could the protocol be modified to have them increment the DH 
 once every ten messages without compromising confidentiality against an eavesdropper (i.e.,
 semantic security)?
 
+No. If you don’t ratchet every time, then if an attacker gets a key during a ratchet segment, they 
+can decrypt all messages sent in that segment.
+
 2. What if they never update their DH keys at all? Please explain the security consequences of
 this change with regards to Forward Secrecy and Break-in Recovery.
 
+If they never update their DH keys at all, there is no break-in recovery. Once the attacker gets the keys,
+ they can decrypt all past and future messages, so there is no forward secrecy because every message is compromised 
+ once the key is compromised.
 
 3. Consider the following conversation between Alice and Bob, protected via the Double Ratchet
 Algorithm according to the spec:
@@ -17,12 +23,18 @@ B: Did i t work?
 
 
 What is the length of the longest sending chain used by Alice? By Bob? Please explain.
-
+The longest sending chain used by Alice is the first two messages because it ratchets up by two steps.
+The longest sending chain used by Bob is one step.
+That’s because Bob sends one message and then receives the next message, so he does not continue sending on the same chain.
 
 4. Unfortunately, in the situation above, Mallory has been monitoring their communications
 and finally managed to compromise Alice’s phone and steal all her keys just before she sent
 her third message. Mallory will be unable to determine the locker combination. State and
 describe the relevant security property and justify why double ratchet provides this property.
+
+The relevant security property is forward secrecy. Even after Mallory compromises Alice’s device,
+she cannot decrypt earlier messages because the Double Ratchet deletes old message keys and advances
+the chain key forward. Once ratcheted, past keys cannot be derived again, so previous messages remain confidential.
 
 5. The method of government surveillance is deeply flawed. Why might it not be as effective as
 intended? What are the major risks involved with this method?
