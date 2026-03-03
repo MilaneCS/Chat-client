@@ -1,0 +1,28 @@
+1. In our implementation, Alice and Bob increment their Diffie-Hellman ratchets every time they
+exchange messages. Could the protocol be modified to have them increment the DH ratchets
+once every ten messages without compromising confidentiality against an eavesdropper (i.e.,
+semantic security)?
+
+2. What if they never update their DH keys at all? Please explain the security consequences of
+this change with regards to Forward Secrecy and Break-in Recovery.
+
+
+3. Consider the following conversation between Alice and Bob, protected via the Double Ratchet
+Algorithm according to the spec:
+A: Hey Bob , can you send me the l o c k e r combo?
+A: I need t o g e t my l a p t o p
+B: Sure , i t ’ s 1 2 3 4!
+A: Great , thanks ! I used i t and d el e t e d the p r e vi o u s message .
+B: Did i t work?
+
+
+What is the length of the longest sending chain used by Alice? By Bob? Please explain.
+
+
+4. Unfortunately, in the situation above, Mallory has been monitoring their communications
+and finally managed to compromise Alice’s phone and steal all her keys just before she sent
+her third message. Mallory will be unable to determine the locker combination. State and
+describe the relevant security property and justify why double ratchet provides this property.
+
+5. The method of government surveillance is deeply flawed. Why might it not be as effective as
+intended? What are the major risks involved with this method?
