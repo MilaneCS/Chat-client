@@ -38,3 +38,6 @@ the chain key forward. Once ratcheted, past keys cannot be derived again, so pre
 
 5. The method of government surveillance is deeply flawed. Why might it not be as effective as
 intended? What are the major risks involved with this method?
+Giving the government a backdoor completely removes any security provided by the double ratchet method, and
+anybody who compromises the government's key will be able to decrypt any message. So, nothing is secret at all.
+Essentially, you're not even using a secure method of communication. 
